@@ -14,6 +14,12 @@ The package can be installed manually or by using
 composer/[packagist](https://packagist.org/packages/art-of-wifi/unifi-api-client) for
 easy inclusion in your projects. See the [installation instructions](#Installation) below for more details.
 
+### New: Dockerized REST API wrapper (port 8181)
+
+We added a dockerized REST API under `api/` that exposes a minimal, bearer-protected HTTP interface for common operations (e.g., `GET /clients`, `PUT /clients/{mac}/alias`). It runs php-fpm behind nginx and is designed for LAN access and inter-container communication (e.g., n8n). See the detailed documentation here:
+
+- [api/README.md](api/README.md)
+
 ## Supported Versions
 
 | Software                             | Versions                                          |

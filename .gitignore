@@ -5,6 +5,10 @@
 /vendor/
 /composer.lock
 
+# api app artifacts
+/api/vendor/
+/api/composer.lock
+
 # ignore phpdoc files
 /build
 .phpdoc-md

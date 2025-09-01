@@ -12,7 +12,7 @@ services:
       UNIFI_PASS: ${UNIFI_PASS}
       UNIFI_VERIFY_SSL: ${UNIFI_VERIFY_SSL:-true}
     networks:
-      - neuralnoc
+      - neuralnoc-network
       # - sharednet
     restart: unless-stopped
 
@@ -26,12 +26,12 @@ services:
     depends_on:
       - api
     networks:
-      - neuralnoc
+      - neuralnoc-network
       # - sharednet
     restart: unless-stopped
 
 networks:
-  neuralnoc:
+  neuralnoc-network:
     external: true
   # sharednet:
   #   driver: bridge

@@ -2,6 +2,7 @@
 
 use App\Middleware\BearerAuthMiddleware;
 use App\UniFi\UniFiService;
+use App\UniFi\PpskService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
@@ -61,6 +62,57 @@ $app->put('/clients/{mac}/alias', function (Request $request, Response $response
         return $json($response, ['updated' => (bool)$updated]);
     } catch (Throwable $e) {
         error_log('PUT /clients/{mac}/alias error: ' . $e->getMessage());
+        return $json($response, ['error' => 'Internal Server Error'], 500);
+    }
+});
+
+// PPSK routes
+$app->get('/ppsk', function (Request $request, Response $response) use ($json) {
+    try {
+        $svc = PpskService::fromEnv();
+        $params = $request->getQueryParams();
+        $wlanId = $params['wlan_id'] ?? null;
+        $ssid   = $params['ssid'] ?? null;
+        $data = $svc->listPpsks($wlanId ?: null, $ssid ?: null);
+        return $json($response, $data);
+    } catch (Throwable $e) {
+        error_log('GET /ppsk error: ' . $e->getMessage());
+        return $json($response, ['error' => 'Internal Server Error'], 500);
+    }
+});
+
+$app->post('/ppsk/create', function (Request $request, Response $response) use ($json) {
+    $payload = (array)$request->getParsedBody();
+    $wlanId = trim((string)($payload['wlan_id'] ?? ''));
+    $password = trim((string)($payload['password'] ?? ''));
+    $networkId = isset($payload['networkconf_id']) ? trim((string)$payload['networkconf_id']) : null;
+    if ($wlanId === '' || $password === '') {
+        return $json($response, ['error' => 'wlan_id and password are required'], 400);
+    }
+    try {
+        $svc = PpskService::fromEnv();
+        $created = $svc->createPpsk($wlanId, $password, $networkId);
+        return $json($response, $created, 201);
+    } catch (Throwable $e) {
+        $code = ($e instanceof InvalidArgumentException) ? 400 : 500;
+        error_log('POST /ppsk/create error: ' . $e->getMessage());
+        return $json($response, ['error' => $e->getMessage()], $code);
+    }
+});
+
+$app->post('/ppsk/revoke', function (Request $request, Response $response) use ($json) {
+    $payload = (array)$request->getParsedBody();
+    $wlanId = trim((string)($payload['wlan_id'] ?? ''));
+    $password = trim((string)($payload['password'] ?? ''));
+    if ($wlanId === '' || $password === '') {
+        return $json($response, ['error' => 'wlan_id and password are required'], 400);
+    }
+    try {
+        $svc = PpskService::fromEnv();
+        $result = $svc->removePpsk($wlanId, $password);
+        return $json($response, $result);
+    } catch (Throwable $e) {
+        error_log('POST /ppsk/revoke error: ' . $e->getMessage());
         return $json($response, ['error' => 'Internal Server Error'], 500);
     }
 });
